@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roof Widget Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .content {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <h1>Strona Klienta</h1>
+        <p>To jest przykładowa strona klienta, na której osadzony jest widget.</p>
+        <p>Widget powinien pojawić się w prawym dolnym rogu.</p>
+    </div>
+
+    <!-- Widget Code -->
+    <script>
+        window.RoofWidgetConfig = {
+            publicKey: 'YOUR_PUBLIC_KEY', // Zastąp kluczem z Dashboardu
+            secretKey: 'YOUR_SECRET_KEY', // Zastąp kluczem z Dashboardu (Note: In Prod, use backend proxy or accepted risk)
+            // widgetUrl: 'http://localhost:5173/widget', // Uncomment for local dev without build serving
+            // apiUrl: 'http://localhost:8000',
+        };
+    </script>
+    <!-- Point to the built loader.js or dev server -->
+    <script src="./dist-widget/loader.js"></script>
+    <!-- For dev: src="http://localhost:5173/widget/loader.js" -->
+</body>
+
+</html>

@@ -6,6 +6,7 @@ export const useAuthStore = create(
     persist(
         (set, get) => ({
             user: null,
+            token: localStorage.getItem('accessToken'),
             isAuthenticated: false,
             isLoading: false,
             error: null,
@@ -19,7 +20,7 @@ export const useAuthStore = create(
                     localStorage.setItem('accessToken', tokens.access);
                     localStorage.setItem('refreshToken', tokens.refresh);
 
-                    set({ user, isAuthenticated: true, isLoading: false });
+                    set({ user, token: tokens.access, isAuthenticated: true, isLoading: false });
                     return { success: true };
                 } catch (error) {
                     const message = error.response?.data?.error || 'Login failed';
@@ -37,7 +38,7 @@ export const useAuthStore = create(
                     localStorage.setItem('accessToken', tokens.access);
                     localStorage.setItem('refreshToken', tokens.refresh);
 
-                    set({ user, isAuthenticated: true, isLoading: false });
+                    set({ user, token: tokens.access, isAuthenticated: true, isLoading: false });
                     return { success: true };
                 } catch (error) {
                     const errors = error.response?.data || {};
@@ -50,7 +51,7 @@ export const useAuthStore = create(
             logout: () => {
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                set({ user: null, isAuthenticated: false });
+                set({ user: null, token: null, isAuthenticated: false });
             },
 
             fetchProfile: async () => {

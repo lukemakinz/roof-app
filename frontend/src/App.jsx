@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NewQuotePage from './pages/NewQuotePage';
+import WidgetConfigPage from './pages/WidgetConfigPage';
+import APIKeyPage from './pages/APIKeyPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +76,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/widget-config"
+            element={
+              <ProtectedRoute>
+                <WidgetConfigPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/api-keys"
+            element={
+              <ProtectedRoute>
+                <APIKeyPage />
               </ProtectedRoute>
             }
           />

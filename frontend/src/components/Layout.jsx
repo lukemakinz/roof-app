@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import {
-    Home, FileText, Settings, LogOut, Menu, X, User, ChevronDown
+    Home, FileText, Settings, LogOut, Menu, X, User, ChevronDown, Layout as LayoutIcon, Key
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,6 +19,8 @@ export default function Layout({ children }) {
     const navItems = [
         { to: '/', icon: Home, label: 'Dashboard' },
         { to: '/quotes', icon: FileText, label: 'Wyceny' },
+        { to: '/widget-config', icon: LayoutIcon, label: 'Widget' },
+        { to: '/api-keys', icon: Key, label: 'Klucze API' },
         { to: '/settings', icon: Settings, label: 'Ustawienia' },
     ];
 
