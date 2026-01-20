@@ -1,0 +1,122 @@
+[
+    {
+        "model": "materials.material",
+        "pk": 1,
+        "fields": {
+            "name": "Blachodachówka Ekonomiczna",
+            "category": "metal_tile",
+            "description": "Ekonomiczne pokrycie z blachy stalowej powlekanej",
+            "price_per_m2": "40.00",
+            "waste_factor": "1.12",
+            "config": {
+                "battens_spacing_cm": 35,
+                "screws_per_m2": 7,
+                "membrane_price_m2": 6,
+                "battens_price_mb": 3.5,
+                "counter_battens_price_mb": 4,
+                "screws_price_per_100": 25,
+                "ridge_tape_price_mb": 12
+            },
+            "active": true,
+            "sort_order": 1,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "materials.material",
+        "pk": 2,
+        "fields": {
+            "name": "Blachodachówka Standard",
+            "category": "metal_tile",
+            "description": "Standardowa blachodachówka z powłoką poliuretanową",
+            "price_per_m2": "50.00",
+            "waste_factor": "1.12",
+            "config": {
+                "battens_spacing_cm": 35,
+                "screws_per_m2": 7,
+                "membrane_price_m2": 7,
+                "battens_price_mb": 4,
+                "counter_battens_price_mb": 5,
+                "screws_price_per_100": 30,
+                "ridge_tape_price_mb": 15
+            },
+            "active": true,
+            "sort_order": 2,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "materials.material",
+        "pk": 3,
+        "fields": {
+            "name": "Blachodachówka Premium",
+            "category": "metal_tile",
+            "description": "Wysokiej jakości blachodachówka z wielowarstwową powłoką",
+            "price_per_m2": "65.00",
+            "waste_factor": "1.10",
+            "config": {
+                "battens_spacing_cm": 32,
+                "screws_per_m2": 8,
+                "membrane_price_m2": 9,
+                "battens_price_mb": 4.5,
+                "counter_battens_price_mb": 5.5,
+                "screws_price_per_100": 35,
+                "ridge_tape_price_mb": 18
+            },
+            "active": true,
+            "sort_order": 3,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "materials.material",
+        "pk": 4,
+        "fields": {
+            "name": "Dachówka Ceramiczna",
+            "category": "ceramic",
+            "description": "Klasyczna dachówka ceramiczna o wysokiej trwałości",
+            "price_per_m2": "85.00",
+            "waste_factor": "1.08",
+            "config": {
+                "battens_spacing_cm": 28,
+                "screws_per_m2": 4,
+                "membrane_price_m2": 8,
+                "battens_price_mb": 5,
+                "counter_battens_price_mb": 6,
+                "screws_price_per_100": 40,
+                "ridge_tape_price_mb": 20
+            },
+            "active": true,
+            "sort_order": 4,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "materials.material",
+        "pk": 5,
+        "fields": {
+            "name": "Papa Termozgrzewalna",
+            "category": "bitumen",
+            "description": "Papa bitumiczna do dachów płaskich",
+            "price_per_m2": "35.00",
+            "waste_factor": "1.15",
+            "config": {
+                "battens_spacing_cm": 0,
+                "screws_per_m2": 0,
+                "membrane_price_m2": 0,
+                "battens_price_mb": 0,
+                "counter_battens_price_mb": 0,
+                "screws_price_per_100": 0,
+                "ridge_tape_price_mb": 0
+            },
+            "active": true,
+            "sort_order": 5,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+    }
+]

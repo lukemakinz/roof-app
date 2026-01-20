@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+:root {
+  --brand-primary: #3b82f6;
+  --brand-secondary: #1e3a8a;
+  --dark-bg: #0f172a;
+  --dark-surface: #1e293b;
+  --dark-border: #334155;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-dark-950 text-dark-100 antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-dark-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-500;
+}
+
+/* Glass morphism utilities */
+@layer components {
+  .glass {
+    @apply bg-dark-900/80 backdrop-blur-xl border border-dark-700/50;
+  }
+
+  .glass-light {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .glass-card {
+    @apply bg-dark-800/50 backdrop-blur-xl border border-dark-700/50 rounded-2xl shadow-glass;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold rounded-xl
+           hover:from-brand-500 hover:to-brand-400 transition-all duration-300
+           shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-dark-800 text-dark-100 font-medium rounded-xl border border-dark-600
+           hover:bg-dark-700 hover:border-dark-500 transition-all duration-300
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-dark-300 font-medium rounded-lg
+           hover:bg-dark-800 hover:text-white transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-dark-800/50 border border-dark-600 rounded-xl
+           text-white placeholder-dark-400 
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500
+           transition-all duration-200;
+  }
+
+  .label-text {
+    @apply block text-sm font-medium text-dark-300 mb-2;
+  }
+
+  .card {
+    @apply bg-dark-800/50 backdrop-blur border border-dark-700/50 rounded-2xl p-6;
+  }
+
+  .card-hover {
+    @apply card hover:border-brand-500/30 hover:shadow-glow transition-all duration-300 cursor-pointer;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-400 to-blue-300 bg-clip-text text-transparent;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-draft {
+    @apply status-badge bg-dark-600 text-dark-200;
+  }
+
+  .status-sent {
+    @apply status-badge bg-brand-500/20 text-brand-400;
+  }
+
+  .status-accepted {
+    @apply status-badge bg-success-500/20 text-success-400;
+  }
+
+  .status-rejected {
+    @apply status-badge bg-error-500/20 text-error-400;
+  }
+
+  /* Step indicator */
+  .step-indicator {
+    @apply flex items-center gap-3;
+  }
+
+  .step-circle {
+    @apply w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
+           transition-all duration-300;
+  }
+
+  .step-active {
+    @apply bg-brand-500 text-white shadow-lg shadow-brand-500/40;
+  }
+
+  .step-completed {
+    @apply bg-success-500 text-white;
+  }
+
+  .step-pending {
+    @apply bg-dark-700 text-dark-400;
+  }
+
+  /* Loading shimmer */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+/* Upload zone */
+.dropzone {
+  @apply border-2 border-dashed border-dark-600 rounded-2xl p-12
+         hover:border-brand-500/50 hover:bg-brand-500/5 
+         transition-all duration-300 cursor-pointer;
+}
+
+.dropzone-active {
+  @apply border-brand-500 bg-brand-500/10;
+}
+
+/* Progress bar */
+.progress-bar {
+  @apply h-2 bg-dark-700 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-brand-600 to-brand-400 rounded-full transition-all duration-500;
+}
+
+/* Mesh background effect */
+.mesh-bg {
+  background: 
+    radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 97% 21%, hsla(256, 98%, 72%, 0.08) 0px, transparent 50%),
+    radial-gradient(at 52% 99%, hsla(225, 100%, 64%, 0.05) 0px, transparent 40%),
+    radial-gradient(at 10% 29%, hsla(202, 72%, 53%, 0.08) 0px, transparent 50%);
+}

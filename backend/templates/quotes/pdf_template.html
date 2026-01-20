@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Oferta {{ quote_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #1a1a2e;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3b82f6;
+        }
+        
+        .company-info h1 {
+            font-size: 24pt;
+            color: #3b82f6;
+            margin-bottom: 5px;
+        }
+        
+        .company-info p {
+            color: #64748b;
+            font-size: 10pt;
+        }
+        
+        .quote-meta {
+            text-align: right;
+        }
+        
+        .quote-meta h2 {
+            font-size: 14pt;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+        }
+        
+        .quote-meta .number {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .quote-meta .date {
+            color: #64748b;
+            margin-top: 10px;
+        }
+        
+        .client-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .client-section h3 {
+            color: #64748b;
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .client-section .name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .scope-section {
+            margin-bottom: 25px;
+        }
+        
+        .scope-section h3 {
+            font-size: 14pt;
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .specs-grid {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .spec-item {
+            flex: 1;
+        }
+        
+        .spec-item label {
+            display: block;
+            color: #64748b;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .spec-item .value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .spec-item .unit {
+            font-size: 10pt;
+            color: #64748b;
+        }
+        
+        .materials-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .materials-table th {
+            background: #1a1a2e;
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .materials-table th:first-child {
+            border-radius: 6px 0 0 0;
+        }
+        
+        .materials-table th:last-child {
+            border-radius: 0 6px 0 0;
+            text-align: right;
+        }
+        
+        .materials-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .materials-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .materials-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .summary-section {
+            margin-top: 30px;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        
+        .summary-row.total {
+            border-top: 2px solid rgba(255,255,255,0.2);
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+        
+        .summary-row .label {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .summary-row .value {
+            font-weight: 600;
+        }
+        
+        .summary-row.total .label,
+        .summary-row.total .value {
+            font-size: 16pt;
+            color: white;
+        }
+        
+        .summary-row.total .value {
+            color: #60a5fa;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer-grid {
+            display: flex;
+            gap: 40px;
+        }
+        
+        .footer-item h4 {
+            color: #64748b;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .footer-item p {
+            color: #1a1a2e;
+        }
+        
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #1a1a2e;
+            padding-top: 10px;
+            font-size: 10pt;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-info">
+            <h1>RoofQuote</h1>
+            <p>Profesjonalne wyceny dachów</p>
+        </div>
+        <div class="quote-meta">
+            <h2>OFERTA</h2>
+            <div class="number">{{ quote_number }}</div>
+            <div class="date">{{ date }}</div>
+        </div>
+    </div>
+    
+    <div class="client-section">
+        <h3>Przygotowano dla</h3>
+        <div class="name">{{ client_name }}</div>
+        {% if client_address %}
+        <div>{{ client_address }}</div>
+        {% endif %}
+        {% if client_email %}
+        <div>{{ client_email }}</div>
+        {% endif %}
+        {% if client_phone %}
+        <div>{{ client_phone }}</div>
+        {% endif %}
+    </div>
+    
+    <div class="scope-section">
+        <h3>Zakres prac: Wymiana pokrycia dachowego</h3>
+        <div class="specs-grid">
+            <div class="spec-item">
+                <label>Typ dachu</label>
+                <div class="value">{{ roof_type }}</div>
+            </div>
+            <div class="spec-item">
+                <label>Powierzchnia użytkowa</label>
+                <div class="value">{{ real_area|floatformat:1 }} <span class="unit">m²</span></div>
+            </div>
+            <div class="spec-item">
+                <label>Kąt nachylenia</label>
+                <div class="value">{{ pitch_angle }}<span class="unit">°</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <table class="materials-table">
+        <thead>
+            <tr>
+                <th>Lp</th>
+                <th>Materiał</th>
+                <th>Ilość</th>
+                <th>J.m.</th>
+                <th>Wartość netto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, item in materials.items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.total|floatformat:2 }} PLN</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="summary-section">
+        <div class="summary-box">
+            <div class="summary-row">
+                <span class="label">Materiały netto</span>
+                <span class="value">{{ materials_net|floatformat:2 }} PLN</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Robocizna netto</span>
+                <span class="value">{{ labor_net|floatformat:2 }} PLN</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Razem netto</span>
+                <span class="value">{{ total_net|floatformat:2 }} PLN</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">VAT {{ vat_rate }}%</span>
+                <span class="value">{{ vat_amount|floatformat:2 }} PLN</span>
+            </div>
+            <div class="summary-row total">
+                <span class="label">RAZEM BRUTTO</span>
+                <span class="value">{{ total_gross|floatformat:2 }} PLN</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="footer-grid">
+            <div class="footer-item">
+                <h4>Termin realizacji</h4>
+                <p>14 dni roboczych</p>
+            </div>
+            <div class="footer-item">
+                <h4>Ważność oferty</h4>
+                <p>30 dni</p>
+            </div>
+            <div class="footer-item">
+                <h4>Kontakt</h4>
+                <p>{{ user.get_full_name|default:user.email }}</p>
+                {% if user.phone %}
+                <p>{{ user.phone }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line">Podpis zleceniodawcy</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Podpis wykonawcy</div>
+        </div>
+    </div>
+</body>
+</html>
