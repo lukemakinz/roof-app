@@ -7,14 +7,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # New minimalist lead capture system
     path('', include('leads.urls')),
+    path('api/widget/', include('widget.urls')),  # Widget API
 
     # ============================================
     # LEGACY API ENDPOINTS (commented out)
     # Uncomment to restore full CRM functionality
     # ============================================
-    # path('api/auth/', include('users.urls')),
-    # path('api/materials/', include('materials.urls')),
-    # path('api/quotes/', include('quotes.urls')),
+    path('api/auth/', include('users.urls')),
+    path('api/materials/', include('materials.urls')),
+    path('api/quotes/', include('quotes.urls')),
 ]
 
 # Serve media files in development

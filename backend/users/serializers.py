@@ -24,7 +24,19 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        
+        # Create user
         user = User.objects.create_user(**validated_data)
+        
+        # Create default company
+        from .models import Company
+        company_name = f"Firma {user.first_name or user.username}"
+        company = Company.objects.create(name=company_name)
+        
+        # Assign company to user
+        user.company = company
+        user.save(update_fields=['company'])
+        
         return user
 
 

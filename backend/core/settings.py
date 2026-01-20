@@ -4,7 +4,7 @@ Django settings for Roof Quote Application.
 
 import os
 from pathlib import Path
-# from datetime import timedelta  # Legacy - uncomment for JWT
+from datetime import timedelta
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -27,18 +27,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
-    # 'rest_framework',  # Legacy - uncomment for full CRM
-    # 'rest_framework_simplejwt',  # Legacy - uncomment for full CRM
+    'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     # Local apps
     'users.apps.UsersConfig',
     'materials.apps.MaterialsConfig',
     'quotes.apps.QuotesConfig',
     'leads.apps.LeadsConfig',
+    'widget.apps.WidgetConfig',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'widget.middleware.WidgetRateLimitMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -119,28 +121,25 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# ============================================
-# LEGACY REST Framework settings (commented out)
-# Uncomment to restore full CRM functionality
-# ============================================
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ),
-#     'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#     ),
-#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-#     'PAGE_SIZE': 20,
-# }
-#
-# SIMPLE_JWT = {
-#     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-#     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-#     'ROTATE_REFRESH_TOKENS': True,
-#     'BLACKLIST_AFTER_ROTATION': False,
-#     'AUTH_HEADER_TYPES': ('Bearer',),
-# }
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 # Claude API (for image analysis)
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
@@ -151,3 +150,25 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 # Celery (optional for now)
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+
+# Frontend URL
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+# Redis
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+    }
+}

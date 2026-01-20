@@ -15,6 +15,11 @@ class Lead(models.Model):
         ('converted', 'Skonwertowany'),
     ]
 
+    SOURCE_CHOICES = [
+        ('landing', 'Landing Page'),
+        ('widget', 'Widget'),
+    ]
+
     FILE_TYPE_CHOICES = [
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
@@ -33,6 +38,36 @@ class Lead(models.Model):
     # Contact information
     email = models.EmailField(verbose_name='Email')
     phone = models.CharField(max_length=20, verbose_name='Numer telefonu')
+
+    # Source info
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        default='landing',
+        db_index=True,
+        verbose_name='Źródło'
+    )
+    widget_config = models.ForeignKey(
+        'widget.WidgetConfig',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='leads',
+        verbose_name='Konfiguracja Widgetu'
+    )
+    widget_metadata = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name='Metadane widgetu'
+    )
+    assigned_to = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_leads',
+        verbose_name='Przypisany handlowiec'
+    )
 
     # Status
     status = models.CharField(

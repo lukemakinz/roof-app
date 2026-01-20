@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3B82F6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Cześć!</h2>
+    <p>Dziękujemy za przesłanie zgłoszenia do wyceny dachu.</p>
+
+    {% if is_ready %}
+    <p>Twoja wycena jest gotowa!</p>
+    {% else %}
+    <p>Potwierdzamy otrzymanie zgłoszenia. Przetwarzamy Twoje dane.</p>
+    {% endif %}
+
+    <p>Możesz w każdej chwili sprawdzić status i wyniki klikając w poniższy link:</p>
+
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ access_url }}" class="btn">Zobacz Wycenę</a>
+    </p>
+
+    <div class="footer">
+        <p>Link jest ważny przez {{ expiration_days }} dni.</p>
+        <p>{{ company_name }}</p>
+    </div>
+</body>
+
+</html>
