@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyniki analizy - Wycena Dachu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #3d5a8c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a365d;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        /* Processing state */
+        .processing {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .processing-spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .processing h2 {
+            color: #2d3748;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .processing p {
+            color: #718096;
+        }
+
+        /* Error state */
+        .error {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            background: #fed7d7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .error-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: #c53030;
+        }
+
+        .error h2 {
+            color: #c53030;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .error p {
+            color: #718096;
+        }
+
+        /* Results */
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-card {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .result-card h3 {
+            color: #2d3748;
+            font-size: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-card h3 svg {
+            width: 20px;
+            height: 20px;
+            fill: #4299e1;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item .label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .result-item .value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Price section */
+        .price-section {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .price-section .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .price-section .price {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .price-section .note {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 12px;
+        }
+
+        /* Download button */
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(66, 153, 225, 0.3);
+        }
+
+        .download-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .download-btn.disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Contact info */
+        .contact-info {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .contact-info p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .contact-info .highlight {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        /* Dimensions grid */
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .dimension-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .dimension-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .dimension-item .label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        /* Elements list */
+        .elements-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .element-tag {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        /* Image preview */
+        .image-card .image-preview {
+            margin-top: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #edf2f7;
+        }
+
+        .image-card .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .pdf-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .pdf-placeholder span {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .price-section .price {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Wyniki analizy</h1>
+            <p>ID: {{ lead.public_uuid }}</p>
+        </div>
+
+        {% if is_processing %}
+        <!-- Processing state -->
+        <div class="processing" id="processing-state">
+            <div class="processing-spinner"></div>
+            <h2>Analizujemy Twój dach</h2>
+            <p>To potrwa maksymalnie kilka minut...</p>
+        </div>
+        {% endif %}
+
+        {% if is_failed %}
+        <!-- Error state -->
+        <div class="error">
+            <div class="error-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <h2>Wystąpił błąd</h2>
+            <p>{{ lead.processing_error|default:"Nie udało się przeanalizować obrazu. Prosimy spróbować ponownie." }}</p>
+        </div>
+        {% endif %}
+
+        {% if is_completed %}
+        <!-- Results -->
+        <div class="results show" id="results">
+            <!-- Uploaded image preview -->
+            {% if lead.uploaded_file %}
+            <div class="result-card image-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    Przesłany rysunek
+                </h3>
+                <div class="image-preview">
+                    {% if lead.file_type == 'pdf' %}
+                    <div class="pdf-placeholder">
+                        <svg viewBox="0 0 24 24" width="48" height="48"><path fill="#e53e3e" d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+                        <span>Plik PDF</span>
+                    </div>
+                    {% else %}
+                    <img src="{{ lead.uploaded_file.url }}" alt="Przesłany rysunek dachu">
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Roof analysis -->
+            <div class="result-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Analiza dachu
+                </h3>
+                <div class="result-item">
+                    <span class="label">Typ dachu</span>
+                    <span class="value" id="roof-type">{{ lead.roof_type|default:"-" }}</span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Kąt nachylenia</span>
+                    <span class="value" id="pitch-angle">{% if lead.pitch_angle %}{{ lead.pitch_angle }}°{% else %}-{% endif %}</span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Powierzchnia dachu</span>
+                    <span class="value" id="roof-area">{% if lead.roof_area %}{{ lead.roof_area }} m²{% else %}-{% endif %}</span>
+                </div>
+            </div>
+
+            {% if lead.dimensions %}
+            <!-- Dimensions -->
+            <div class="result-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>
+                    Wymiary
+                </h3>
+                <div class="dimensions-grid">
+                    {% if lead.dimensions.dlugosc_m %}
+                    <div class="dimension-item">
+                        <div class="value">{{ lead.dimensions.dlugosc_m }} m</div>
+                        <div class="label">Długość</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.dimensions.szerokosc_m %}
+                    <div class="dimension-item">
+                        <div class="value">{{ lead.dimensions.szerokosc_m }} m</div>
+                        <div class="label">Szerokość</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.dimensions.wysokosc_kalenicy_m %}
+                    <div class="dimension-item">
+                        <div class="value">{{ lead.dimensions.wysokosc_kalenicy_m }} m</div>
+                        <div class="label">Wysokość kalenicy</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if lead.roof_elements %}
+            <!-- Elementy dodatkowe -->
+            <div class="result-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+                    Elementy dachu
+                </h3>
+                <div class="elements-list">
+                    {% if lead.roof_elements.kominy %}
+                    <span class="element-tag">Kominy: {{ lead.roof_elements.kominy }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.kominki_wentylacyjne %}
+                    <span class="element-tag">Kominki wentylacyjne: {{ lead.roof_elements.kominki_wentylacyjne }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.okna_dachowe %}
+                    <span class="element-tag">Okna dachowe: {{ lead.roof_elements.okna_dachowe }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.wylazy_dachowe %}
+                    <span class="element-tag">Wyłazy dachowe: {{ lead.roof_elements.wylazy_dachowe }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Elementy gąsiorowe -->
+            {% if lead.roof_elements.trojniki or lead.roof_elements.gasiory_narozne or lead.roof_elements.gasiory_poczatkowe or lead.roof_elements.gasiory_koncowe %}
+            <div class="result-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Elementy gąsiorowe
+                </h3>
+                <div class="elements-list">
+                    {% if lead.roof_elements.trojniki %}
+                    <span class="element-tag">Trójniki: {{ lead.roof_elements.trojniki }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.gasiory_narozne %}
+                    <span class="element-tag">Gąsiory narożne: {{ lead.roof_elements.gasiory_narozne }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.gasiory_poczatkowe %}
+                    <span class="element-tag">Gąsiory początkowe: {{ lead.roof_elements.gasiory_poczatkowe }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.gasiory_koncowe %}
+                    <span class="element-tag">Gąsiory końcowe: {{ lead.roof_elements.gasiory_koncowe }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- System odwodnienia -->
+            {% if lead.roof_elements.narozniki_rynien or lead.roof_elements.rury_spustowe or lead.roof_elements.zaslepki_rynien %}
+            <div class="result-card">
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.79 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
+                    System odwodnienia
+                </h3>
+                <div class="elements-list">
+                    {% if lead.roof_elements.narozniki_rynien %}
+                    <span class="element-tag">Narożniki rynien: {{ lead.roof_elements.narozniki_rynien }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.rury_spustowe %}
+                    <span class="element-tag">Rury spustowe: {{ lead.roof_elements.rury_spustowe }}</span>
+                    {% endif %}
+                    {% if lead.roof_elements.zaslepki_rynien %}
+                    <span class="element-tag">Zaślepki rynien: {{ lead.roof_elements.zaslepki_rynien }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Price -->
+            {% if lead.estimated_price_min %}
+            <div class="price-section">
+                <div class="label">Szacowana cena od</div>
+                <div class="price" id="price">{{ lead.estimated_price_min|floatformat:0 }} PLN</div>
+                <div class="note">* Ostateczna cena zależy od wybranego materiału i szczegółów wykonania</div>
+            </div>
+            {% endif %}
+
+            <!-- Download PDF -->
+            {% if lead.result_pdf %}
+            <a href="{% url 'leads:download_pdf' lead.public_uuid %}" class="download-btn" id="download-btn">
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Pobierz PDF z wyceną
+            </a>
+            {% else %}
+            <button class="download-btn disabled" disabled>
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                PDF jest generowany...
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="contact-info">
+            <p>Masz pytania? Skontaktujemy się z Tobą wkrótce.</p>
+            <p><span class="highlight">{{ lead.email }}</span> | <span class="highlight">{{ lead.phone }}</span></p>
+        </div>
+    </div>
+
+    {% if is_processing %}
+    <script>
+        // Poll for status updates
+        const uuid = '{{ lead.public_uuid }}';
+        const checkInterval = 3000; // 3 seconds
+
+        async function checkStatus() {
+            try {
+                const response = await fetch(`/api/status/${uuid}/`);
+                const data = await response.json();
+
+                if (data.status === 'completed' || data.status === 'failed') {
+                    // Reload the page to show results
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        }
+
+        // Start polling
+        setInterval(checkStatus, checkInterval);
+    </script>
+    {% endif %}
+</body>
+</html>

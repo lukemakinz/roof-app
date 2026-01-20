@@ -4,7 +4,7 @@ Django settings for Roof Quote Application.
 
 import os
 from pathlib import Path
-from datetime import timedelta
+# from datetime import timedelta  # Legacy - uncomment for JWT
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -27,13 +27,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
-    'rest_framework',
-    'rest_framework_simplejwt',
+    # 'rest_framework',  # Legacy - uncomment for full CRM
+    # 'rest_framework_simplejwt',  # Legacy - uncomment for full CRM
     'corsheaders',
     # Local apps
     'users.apps.UsersConfig',
     'materials.apps.MaterialsConfig',
     'quotes.apps.QuotesConfig',
+    'leads.apps.LeadsConfig',
 ]
 
 MIDDLEWARE = [
@@ -118,26 +119,28 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Django REST Framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-}
-
-# JWT Settings
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': False,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# ============================================
+# LEGACY REST Framework settings (commented out)
+# Uncomment to restore full CRM functionality
+# ============================================
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 20,
+# }
+#
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+#     'ROTATE_REFRESH_TOKENS': True,
+#     'BLACKLIST_AFTER_ROTATION': False,
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
 
 # Claude API (for image analysis)
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
