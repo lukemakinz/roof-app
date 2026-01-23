@@ -9,6 +9,8 @@ import DashboardPage from './pages/DashboardPage';
 import NewQuotePage from './pages/NewQuotePage';
 import WidgetConfigPage from './pages/WidgetConfigPage';
 import APIKeyPage from './pages/APIKeyPage';
+import SettingsPage from './pages/SettingsPage';
+import WidgetPreviewPage from './pages/WidgetPreviewPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +118,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <NewQuotePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/widget-preview"
+            element={
+              <ProtectedRoute>
+                <WidgetPreviewPage />
               </ProtectedRoute>
             }
           />

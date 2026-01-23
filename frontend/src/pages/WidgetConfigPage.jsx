@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 import Layout from '../components/Layout';
+import { Eye } from 'lucide-react';
 
 export default function WidgetConfigPage() {
     const { token } = useAuthStore();
@@ -169,13 +171,30 @@ export default function WidgetConfigPage() {
                                 />
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 space-y-3">
                                 <button
                                     type="submit"
                                     disabled={mutation.isPending}
                                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                                 >
                                     {mutation.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const params = new URLSearchParams({
+                                            color: formState.primary_color,
+                                            position: formState.position,
+                                            header: formState.header_text,
+                                            button: formState.button_text,
+                                            description: formState.description_text
+                                        });
+                                        window.open(`/widget-preview?${params.toString()}`, '_blank');
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                    Podgląd na stronie
                                 </button>
                             </div>
                         </form>

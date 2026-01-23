@@ -18,7 +18,6 @@ export default function Layout({ children }) {
 
     const navItems = [
         { to: '/', icon: Home, label: 'Dashboard' },
-        { to: '/quotes', icon: FileText, label: 'Wyceny' },
         { to: '/widget-config', icon: LayoutIcon, label: 'Widget' },
         { to: '/api-keys', icon: Key, label: 'Klucze API' },
         { to: '/settings', icon: Settings, label: 'Ustawienia' },
