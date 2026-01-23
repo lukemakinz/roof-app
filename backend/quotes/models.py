@@ -25,6 +25,7 @@ class Quote(models.Model):
     
     STATUSES = [
         ('draft', 'Roboczy'),
+        ('contacted', 'Skontaktowano'),
         ('sent', 'Wysłano'),
         ('accepted', 'Zaakceptowano'),
         ('rejected', 'Odrzucono'),

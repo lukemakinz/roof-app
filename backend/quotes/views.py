@@ -34,6 +34,38 @@ class QuoteViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get dashboard statistics."""
+        queryset = self.get_queryset()
+        
+        from django.db.models import Count, Sum, Q
+        
+        # Calculate totals
+        total_quotes = queryset.count()
+        total_value = queryset.filter(status='accepted').aggregate(
+            total=Sum('total_gross')
+        )['total'] or 0
+        
+        # Calculate counts by status
+        counts = queryset.aggregate(
+            draft=Count('id', filter=Q(status='draft')),
+            contacted=Count('id', filter=Q(status='contacted')),
+            sent=Count('id', filter=Q(status='sent')),
+            accepted=Count('id', filter=Q(status='accepted')),
+            rejected=Count('id', filter=Q(status='rejected')),
+        )
+        
+        return Response({
+            'total': total_quotes,
+            'draft': counts['draft'],
+            'contacted': counts['contacted'],
+            'sent': counts['sent'],
+            'accepted': counts['accepted'],
+            'rejected': counts['rejected'],
+            'totalValue': float(total_value)
+        })
     
     @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload(self, request, pk=None):

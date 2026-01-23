@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 import Layout from '../components/Layout';
-import { Eye } from 'lucide-react';
+import { Eye, Code, Copy, X } from 'lucide-react';
+import { widgetAPI } from '../lib/api';
 
 export default function WidgetConfigPage() {
     const { token } = useAuthStore();
     const queryClient = useQueryClient();
+    const [showInstallModal, setShowInstallModal] = useState(false);
 
     const [formState, setFormState] = useState({
         primary_color: '#3B82F6',
@@ -21,11 +23,8 @@ export default function WidgetConfigPage() {
     const { data: config, isLoading } = useQuery({
         queryKey: ['widgetConfig'],
         queryFn: async () => {
-            const res = await fetch('http://localhost:8000/api/widget/dashboard/config/', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to load config');
-            return res.json();
+            const res = await widgetAPI.getConfig();
+            return res.data;
         }
     });
 
@@ -43,16 +42,8 @@ export default function WidgetConfigPage() {
 
     const mutation = useMutation({
         mutationFn: async (newData) => {
-            const res = await fetch('http://localhost:8000/api/widget/dashboard/config/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(newData)
-            });
-            if (!res.ok) throw new Error('Failed to update config');
-            return res.json();
+            const res = await widgetAPI.updateConfig(newData);
+            return res.data;
         },
         onSuccess: () => {
             toast.success('Konfiguracja zapisana!');
@@ -196,6 +187,14 @@ export default function WidgetConfigPage() {
                                     <Eye className="w-4 h-4" />
                                     Podgląd na stronie
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInstallModal(true)}
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-emerald-600 rounded-md shadow-sm text-sm font-medium text-emerald-300 bg-emerald-900/30 hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                                >
+                                    <Code className="w-4 h-4" />
+                                    Instrukcja instalacji
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -250,6 +249,93 @@ export default function WidgetConfigPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Installation Modal */}
+            {showInstallModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-auto">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-700">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Code className="w-5 h-5 text-emerald-400" />
+                                Instrukcja instalacji widgetu
+                            </h2>
+                            <button
+                                onClick={() => setShowInstallModal(false)}
+                                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-300 mb-2">1. Skopiuj poniższy kod</h3>
+                                <p className="text-sm text-slate-400 mb-3">
+                                    Wklej ten kod przed zamykającym tagiem <code className="bg-slate-700 px-1.5 py-0.5 rounded text-emerald-400">&lt;/body&gt;</code> na swojej stronie:
+                                </p>
+                                <div className="relative">
+                                    <pre className="bg-slate-900 rounded-lg p-4 text-sm text-slate-300 overflow-x-auto border border-slate-700">
+                                        <code>{`<!-- Konfiguracja Widgetu RoofQuote -->
+<script>
+    window.RoofWidgetConfig = {
+        publicKey: '${config?.public_key || 'TU_WKLEJ_PUBLIC_KEY'}',
+        secretKey: '${config?.secret_key || 'TU_WKLEJ_SECRET_KEY'}',
+    };
+</script>
+<!-- Skrypt ładujący -->
+<script src="http://localhost:5173/widget/loader.js" async></script>`}</code>
+                                    </pre>
+                                    <button
+                                        onClick={() => {
+                                            const code = `<!-- Konfiguracja Widgetu RoofQuote -->
+<script>
+    window.RoofWidgetConfig = {
+        publicKey: '${config?.public_key || 'TU_WKLEJ_PUBLIC_KEY'}',
+        secretKey: '${config?.secret_key || 'TU_WKLEJ_SECRET_KEY'}',
+    };
+</script>
+<!-- Skrypt ładujący -->
+<script src="http://localhost:5173/widget/loader.js" async></script>`;
+                                            navigator.clipboard.writeText(code);
+                                            toast.success('Kod skopiowany!');
+                                        }}
+                                        className="absolute top-2 right-2 p-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                                        title="Kopiuj kod"
+                                    >
+                                        <Copy className="w-4 h-4 text-slate-300" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-300 mb-2">2. Pobierz klucze API</h3>
+                                <p className="text-sm text-slate-400 mb-3">
+                                    Przejdź do sekcji <strong className="text-white">"Klucze API"</strong> w menu bocznym, aby wygenerować klucze dla swojego widgetu.
+                                </p>
+                                <div className="bg-amber-900/30 border border-amber-700/50 rounded-lg p-3">
+                                    <p className="text-sm text-amber-200/80">
+                                        <strong className="text-amber-300">⚠️ Bezpieczeństwo:</strong> Klucze API są wyświetlane tylko raz podczas tworzenia.
+                                        Zapisz je w bezpiecznym miejscu zaraz po wygenerowaniu.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4">
+                                <h3 className="text-sm font-semibold text-blue-300 mb-1">💡 Wskazówka</h3>
+                                <p className="text-sm text-blue-200/80">
+                                    Widget automatycznie pobierze konfigurację (kolory, teksty, pozycję) z serwera.
+                                    Możesz ją zmienić w dowolnym momencie bez modyfikacji kodu na stronie.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-slate-700">
+                            <button
+                                onClick={() => setShowInstallModal(false)}
+                                className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Zamknij
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }

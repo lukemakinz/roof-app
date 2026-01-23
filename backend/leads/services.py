@@ -322,10 +322,23 @@ def process_roof_image(file_path: str) -> Optional[dict]:
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             return None
+            
+        file_size = os.path.getsize(file_path)
+        logger.info(f"DEBUG: Image file size: {file_size} bytes")
+        if file_size == 0:
+            logger.error("DEBUG: File is empty!")
+            return None
 
         # Encode image
         image_data = encode_image_to_base64(file_path)
         media_type = get_image_media_type(file_path)
+        logger.info(f"DEBUG: Media type: {media_type}")
+        
+        if not settings.OPENAI_API_KEY:
+            logger.error("DEBUG: OPENAI_API_KEY is missing!")
+            return None
+            
+        logger.info(f"DEBUG: Using API Key: {settings.OPENAI_API_KEY[:5]}...")
 
         # STEP 1: First, extract ONLY the angle with a focused query
         angle_prompt = """Przeanalizuj ten rysunek techniczny dachu.

@@ -1,10 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Home, Zap, Shield, Phone, Mail, MapPin } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import { ArrowLeft, Home, Zap, Shield, Phone, Mail, MapPin, Key, PlayCircle, Loader2 } from 'lucide-react';
+import { useAuthStore } from '../stores/authStore';
+import { widgetAPI } from '../lib/api';
 
 export default function WidgetPreviewPage() {
     const [searchParams] = useSearchParams();
+    const { token } = useAuthStore();
     const [isWidgetOpen, setIsWidgetOpen] = useState(false);
+    const [selectedKey, setSelectedKey] = useState(null);
+    const [useLiveWidget, setUseLiveWidget] = useState(false);
+
+    // Form state for live widget testing
+    const [formData, setFormData] = useState({ email: '', phone: '', file: null });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fileName, setFileName] = useState('');
+
+    // Fetch API keys
+    const { data: apiKeys } = useQuery({
+        queryKey: ['apiKeys'],
+        queryFn: async () => {
+            const res = await widgetAPI.getKeys();
+            return res.data;
+        }
+    });
 
     // Get widget config from URL params
     const config = {
@@ -17,10 +38,88 @@ export default function WidgetPreviewPage() {
 
     const [vPos, hPos] = config.position.split('-');
 
+    // Handle form submission
+    const handleSubmit = async () => {
+        if (!useLiveWidget || !selectedKey?.temp_secret) {
+            alert('To jest tylko podgląd - dane nie zostaną wysłane.\n\nAby przetestować wysyłanie, wprowadź klucze API i kliknij "Uruchom widget".');
+            return;
+        }
+
+        if (!formData.email || !formData.phone || !formData.file) {
+            toast.error('Wypełnij wszystkie pola i wybierz plik');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const submitFormData = new FormData();
+            submitFormData.append('email', formData.email);
+            submitFormData.append('phone', formData.phone);
+            submitFormData.append('file', formData.file);
+
+            const response = await fetch('http://localhost:8000/api/widget/submit/', {
+                method: 'POST',
+                headers: {
+                    'X-Widget-Public-Key': encodeURIComponent(selectedKey.public_key),
+                    'X-Widget-Secret-Key': encodeURIComponent(selectedKey.temp_secret),
+                },
+                body: submitFormData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                toast.success('Formularz wysłany pomyślnie! ' + data.message);
+                setFormData({ email: '', phone: '', file: null });
+                setFileName('');
+                setIsWidgetOpen(false);
+            } else {
+                const error = await response.json();
+                toast.error('Błąd: ' + (error.error || 'Nie udało się wysłać'));
+            }
+        } catch (error) {
+            toast.error('Błąd połączenia: ' + error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Load real widget when API key is selected
+    useEffect(() => {
+        if (useLiveWidget && selectedKey && selectedKey.temp_secret) {
+            // Set widget config
+            window.RoofWidgetConfig = {
+                publicKey: selectedKey.public_key,
+                secretKey: selectedKey.temp_secret,
+                apiUrl: 'http://localhost:8000'
+            };
+
+            // Load the widget script
+            const existingScript = document.getElementById('roof-widget-loader');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            const script = document.createElement('script');
+            script.id = 'roof-widget-loader';
+            script.src = 'http://localhost:5173/widget/loader.js';
+            script.async = true;
+            document.body.appendChild(script);
+
+            return () => {
+                // Cleanup
+                const widgetRoot = document.getElementById('roof-widget-root');
+                if (widgetRoot) widgetRoot.remove();
+                const loader = document.getElementById('roof-widget-loader');
+                if (loader) loader.remove();
+            };
+        }
+    }, [useLiveWidget, selectedKey]);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
             {/* Back to config link */}
-            <div className="fixed top-4 left-4 z-50">
+            <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
                 <Link
                     to="/widget-config"
                     className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-lg text-slate-700 hover:bg-slate-50 transition-colors"
@@ -28,6 +127,87 @@ export default function WidgetPreviewPage() {
                     <ArrowLeft className="w-4 h-4" />
                     Powrót do konfiguracji
                 </Link>
+            </div>
+
+            {/* API Key Selector - Top Right */}
+            <div className="fixed top-4 right-4 z-50">
+                <div className="bg-white rounded-xl shadow-lg p-4 border border-slate-200 w-80">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Key className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-semibold text-slate-700">Test z kluczem API</span>
+                    </div>
+
+                    {apiKeys && apiKeys.length > 0 ? (
+                        <>
+                            <select
+                                value={selectedKey?.id || ''}
+                                onChange={(e) => {
+                                    const key = apiKeys.find(k => k.id === parseInt(e.target.value));
+                                    setSelectedKey(key || null);
+                                    setUseLiveWidget(false);
+                                }}
+                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg mb-3 text-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                            >
+                                <option value="">Wybierz klucz API...</option>
+                                {apiKeys.map(key => (
+                                    <option key={key.id} value={key.id}>
+                                        {key.name} ({key.public_key.substring(0, 8)}...)
+                                    </option>
+                                ))}
+                            </select>
+
+                            {selectedKey && (
+                                <div className="space-y-3">
+                                    <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded">
+                                        <strong>Public Key:</strong><br />
+                                        <code className="text-emerald-600 text-[10px]">{selectedKey.public_key}</code>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                                            🔐 Wklej Secret Key (jednorazowo):
+                                        </label>
+                                        <input
+                                            type="password"
+                                            placeholder="Wklej secret key..."
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg text-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                            onChange={(e) => {
+                                                selectedKey.temp_secret = e.target.value;
+                                            }}
+                                        />
+                                        <p className="text-[10px] text-slate-400 mt-1">
+                                            Klucz zostanie usunięty po odświeżeniu strony
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (selectedKey.temp_secret) {
+                                                setUseLiveWidget(true);
+                                            } else {
+                                                alert('Wklej secret key aby uruchomić test');
+                                            }
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                                    >
+                                        <PlayCircle className="w-4 h-4" />
+                                        Uruchom widget
+                                    </button>
+
+                                    {useLiveWidget && (
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-xs text-emerald-700">
+                                            ✅ Widget aktywny - testuj poniżej
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <p className="text-xs text-slate-500">
+                            Brak kluczy API. Utwórz je w sekcji "Klucze API".
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Hero Section */}
@@ -166,87 +346,122 @@ export default function WidgetPreviewPage() {
                 </div>
             </section>
 
-            {/* Interactive Widget Preview */}
-            <div
-                className="fixed z-40"
-                style={{
-                    [vPos]: '20px',
-                    [hPos]: '20px'
-                }}
-            >
-                {/* Widget Button - visible when widget is closed */}
-                {!isWidgetOpen && (
-                    <button
-                        onClick={() => setIsWidgetOpen(true)}
-                        className="px-6 py-3 rounded-full text-white font-bold shadow-2xl transition-all hover:scale-105 hover:shadow-xl"
-                        style={{ backgroundColor: config.primaryColor }}
+            {/* Widget Preview - always shown, functional in live mode */}
+            {(true) && (
+                <>
+                    <div
+                        className="fixed z-40"
+                        style={{
+                            [vPos]: '20px',
+                            [hPos]: '20px'
+                        }}
                     >
-                        {config.buttonText}
-                    </button>
-                )}
-            </div>
-
-            {/* Widget Modal - visible when widget is open */}
-            {isWidgetOpen && (
-                <div
-                    className="fixed z-30 bg-white rounded-xl shadow-2xl w-80 overflow-hidden"
-                    style={{
-                        [vPos]: '20px',
-                        [hPos]: '20px',
-                        borderTop: `4px solid ${config.primaryColor}`
-                    }}
-                >
-                    <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-bold text-gray-900">{config.headerText}</h3>
+                        {/* Widget Button - visible when widget is closed */}
+                        {!isWidgetOpen && (
                             <button
-                                onClick={() => setIsWidgetOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
+                                onClick={() => setIsWidgetOpen(true)}
+                                className="px-6 py-3 rounded-full text-white font-bold shadow-2xl transition-all hover:scale-105 hover:shadow-xl"
+                                style={{ backgroundColor: config.primaryColor }}
                             >
-                                &times;
+                                {config.buttonText}
                             </button>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">{config.descriptionText}</p>
-
-                        <div className="space-y-3 mb-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-400"
-                                    placeholder="twoj@email.pl"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1">Telefon</label>
-                                <input
-                                    type="tel"
-                                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-400"
-                                    placeholder="+48 123 456 789"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1">Zdjęcie dachu / Rzut</label>
-                                <div className="w-full text-sm border border-dashed border-gray-300 rounded px-3 py-4 text-gray-400 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                                    Wybierz plik (PNG, JPG, PDF)
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                            style={{ backgroundColor: config.primaryColor }}
-                        >
-                            Wyślij
-                        </button>
+                        )}
                     </div>
-                </div>
+
+                    {/* Widget Modal - visible when widget is open */}
+                    {isWidgetOpen && (
+                        <div
+                            className="fixed z-30 bg-white rounded-xl shadow-2xl w-80 overflow-hidden"
+                            style={{
+                                [vPos]: '20px',
+                                [hPos]: '20px',
+                                borderTop: `4px solid ${config.primaryColor}`
+                            }}
+                        >
+                            <div className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="font-bold text-gray-900">{config.headerText}</h3>
+                                    <button
+                                        onClick={() => setIsWidgetOpen(false)}
+                                        className="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-4">{config.descriptionText}</p>
+
+                                {useLiveWidget && (
+                                    <div className="mb-3 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
+                                        🔴 Tryb live - dane zostaną wysłane do API
+                                    </div>
+                                )}
+
+                                <div className="space-y-3 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="w-full text-sm border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-400"
+                                            placeholder="twoj@email.pl"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Telefon</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full text-sm border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-400"
+                                            placeholder="+48 123 456 789"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Zdjęcie dachu / Rzut</label>
+                                        <label className={`w-full text-sm border border-dashed rounded px-3 py-4 text-center cursor-pointer transition-colors block ${fileName ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-gray-300 text-gray-400 hover:border-gray-400 hover:bg-gray-50'}`}>
+                                            <input
+                                                type="file"
+                                                accept="image/*,.pdf"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    if (e.target.files[0]) {
+                                                        setFormData({ ...formData, file: e.target.files[0] });
+                                                        setFileName(e.target.files[0].name);
+                                                    }
+                                                }}
+                                            />
+                                            {fileName || 'Wybierz plik (PNG, JPG, PDF)'}
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting}
+                                    className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    style={{ backgroundColor: config.primaryColor }}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Wysyłanie...
+                                        </>
+                                    ) : 'Wyślij'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Info badge */}
             <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-lg z-50">
                 <span className="text-sm">
-                    👆 Kliknij przycisk "{config.buttonText}" aby otworzyć/zamknąć widget
+                    {useLiveWidget
+                        ? '🔴 Widget live - używa prawdziwego API'
+                        : `👆 Kliknij przycisk "${config.buttonText}" aby otworzyć/zamknąć widget (podgląd statyczny)`
+                    }
                 </span>
             </div>
         </div>

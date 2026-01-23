@@ -108,15 +108,19 @@ export default function Layout({ children }) {
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-dark-800 transition-colors"
                             >
-                                <div className="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center">
+                                <div className="w-10 h-10 shrink-0 aspect-square rounded-full bg-brand-500/20 flex items-center justify-center">
                                     <User className="w-5 h-5 text-brand-400" />
                                 </div>
                                 <div className="flex-1 text-left">
-                                    <div className="text-sm font-medium text-white truncate">
-                                        {user?.first_name || user?.username || 'Użytkownik'}
+                                    <div className="text-sm font-medium text-white" title={user?.first_name || user?.username}>
+                                        {(user?.first_name || user?.username || 'Użytkownik').length > 16
+                                            ? (user?.first_name || user?.username || 'Użytkownik').substring(0, 16) + '...'
+                                            : (user?.first_name || user?.username || 'Użytkownik')}
                                     </div>
-                                    <div className="text-xs text-dark-400 truncate">
-                                        {user?.email}
+                                    <div className="text-xs text-dark-400" title={user?.email}>
+                                        {(user?.email || '').length > 20
+                                            ? (user?.email || '').substring(0, 20) + '...'
+                                            : (user?.email || '')}
                                     </div>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-dark-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />

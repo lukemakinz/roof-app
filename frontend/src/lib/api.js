@@ -76,6 +76,7 @@ export const quotesAPI = {
     create: (data) => api.post('/quotes/', data),
     update: (id, data) => api.patch(`/quotes/${id}/`, data),
     delete: (id) => api.delete(`/quotes/${id}/`),
+    getStats: () => api.get('/quotes/stats/'),
 
     // Special actions
     uploadImage: (id, file) => {
@@ -93,6 +94,15 @@ export const quotesAPI = {
         api.post(`/quotes/${id}/calculate/`, { material_id: materialId, margin_percent: marginPercent }),
     generatePDF: (id, clientData) => api.post(`/quotes/${id}/generate_pdf/`, clientData),
     duplicate: (id) => api.post(`/quotes/${id}/duplicate/`),
+};
+
+// Widget Dashboard API
+export const widgetAPI = {
+    getConfig: () => api.get('/widget/dashboard/config/'),
+    updateConfig: (data) => api.post('/widget/dashboard/config/', data),
+    getKeys: () => api.get('/widget/dashboard/api-keys/'),
+    createKey: (name) => api.post('/widget/dashboard/api-keys/create/', { name }),
+    deleteKey: (id) => api.delete(`/widget/dashboard/api-keys/${id}/delete/`),
 };
 
 export default api;

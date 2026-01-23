@@ -14,4 +14,5 @@ urlpatterns = [
     path('dashboard/config/', views.DashboardConfigView.as_view(), name='dashboard-config'),
     path('dashboard/api-keys/', views.APIKeysListView.as_view(), name='dashboard-keys-list'),
     path('dashboard/api-keys/create/', views.APIKeyCreateView.as_view(), name='dashboard-keys-create'),
+    path('dashboard/api-keys/<int:key_id>/delete/', views.APIKeyDeleteView.as_view(), name='dashboard-keys-delete'),
 ]

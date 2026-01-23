@@ -1,4 +1,5 @@
 from rest_framework import authentication, exceptions
+from urllib.parse import unquote
 from .models import APIKey
 
 class WidgetAPIKeyAuthentication(authentication.BaseAuthentication):
@@ -13,8 +14,17 @@ class WidgetAPIKeyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         public_key = request.headers.get('X-Widget-Public-Key')
         secret_key = request.headers.get('X-Widget-Secret-Key')
+        
+        print(f"DEBUG: Auth - Headers keys: PK={public_key}, SK={'*' * 5 if secret_key else 'None'}")
+        
+        # Decode URL-encoded keys (for special characters in headers)
+        if public_key:
+            public_key = unquote(public_key)
+        if secret_key:
+            secret_key = unquote(secret_key)
 
         if not public_key or not secret_key:
+            print("DEBUG: Auth - Missing keys")
             return None
 
         try:
@@ -23,7 +33,12 @@ class WidgetAPIKeyAuthentication(authentication.BaseAuthentication):
                 is_active=True
             )
         except APIKey.DoesNotExist:
+            print("DEBUG: Auth - APIKey DoesNotExist or Inactive")
             raise exceptions.AuthenticationFailed('Invalid API key')
+            
+        if not api_key.verify_secret(secret_key):
+            print("DEBUG: Auth - Invalid secret")
+            raise exceptions.AuthenticationFailed('Invalid secret key')
 
         if not api_key.verify_secret(secret_key):
             raise exceptions.AuthenticationFailed('Invalid secret key')

@@ -5,12 +5,13 @@ import { useAuthStore } from '../stores/authStore';
 import Layout from '../components/Layout';
 import {
     Plus, Search, Filter, MoreVertical, FileText, Calendar,
-    TrendingUp, Clock, CheckCircle, XCircle, Send, Loader2
+    TrendingUp, Clock, CheckCircle, XCircle, Send, Loader2, Trash
 } from 'lucide-react';
 
 const statusConfig = {
     draft: { label: 'Roboczy', class: 'status-draft', icon: Clock },
     sent: { label: 'Wysłano', class: 'status-sent', icon: Send },
+    contacted: { label: 'Skontaktowano', class: 'status-contacted', icon: Send }, // Reusing Send icon or maybe Phone?
     accepted: { label: 'Zaakceptowano', class: 'status-accepted', icon: CheckCircle },
     rejected: { label: 'Odrzucono', class: 'status-rejected', icon: XCircle },
 };
@@ -21,17 +22,31 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [stats, setStats] = useState({
+        total: 0,
+        draft: 0,
+        contacted: 0,
+        sent: 0,
+        accepted: 0,
+        rejected: 0,
+        totalValue: 0
+    });
+    const [activeMenuQuoteId, setActiveMenuQuoteId] = useState(null);
 
     useEffect(() => {
-        fetchQuotes();
+        fetchData();
     }, []);
 
-    const fetchQuotes = async () => {
+    const fetchData = async () => {
         try {
-            const response = await quotesAPI.getAll();
-            setQuotes(response.data.results || response.data);
+            const [quotesRes, statsRes] = await Promise.all([
+                quotesAPI.getAll(),
+                quotesAPI.getStats()
+            ]);
+            setQuotes(quotesRes.data.results || quotesRes.data);
+            setStats(statsRes.data);
         } catch (error) {
-            console.error('Failed to fetch quotes:', error);
+            console.error('Failed to fetch data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -45,16 +60,19 @@ export default function DashboardPage() {
         return matchesSearch && matchesStatus;
     });
 
-    // Stats calculation
-    const stats = {
-        total: quotes.length,
-        draft: quotes.filter((q) => q.status === 'draft').length,
-        sent: quotes.filter((q) => q.status === 'sent').length,
-        accepted: quotes.filter((q) => q.status === 'accepted').length,
-        totalValue: quotes
-            .filter((q) => q.status === 'accepted')
-            .reduce((sum, q) => sum + (parseFloat(q.total_gross) || 0), 0),
+    const handleDelete = async (id) => {
+        if (!window.confirm('Czy na pewno chcesz usunąć tę wycenę?')) return;
+        try {
+            await quotesAPI.delete(id);
+            fetchData(); // Refresh data
+        } catch (error) {
+            console.error('Failed to delete quote:', error);
+        }
+        setActiveMenuQuoteId(null);
     };
+
+    // Stats are now fetched from API
+    // const stats = ...
 
     return (
         <Layout>
@@ -141,13 +159,13 @@ export default function DashboardPage() {
                         />
                     </div>
                     <div className="flex gap-2">
-                        {['all', 'draft', 'sent', 'accepted', 'rejected'].map((status) => (
+                        {['all', 'draft', 'contacted', 'sent', 'accepted', 'rejected'].map((status) => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${statusFilter === status
-                                        ? 'bg-brand-500 text-white'
-                                        : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                                    ? 'bg-brand-500 text-white'
+                                    : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
                                     }`}
                             >
                                 {status === 'all' ? 'Wszystkie' : statusConfig[status]?.label}
@@ -236,10 +254,36 @@ export default function DashboardPage() {
                                             <td className="px-6 py-4 text-dark-400 text-sm hidden sm:table-cell">
                                                 {new Date(quote.created_at).toLocaleDateString('pl-PL')}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <button className="p-2 hover:bg-dark-700 rounded-lg transition-colors">
-                                                    <MoreVertical className="w-4 h-4 text-dark-400" />
-                                                </button>
+                                            <td className="px-6 py-4 pr-12 text-right">
+                                                <div
+                                                    className="relative inline-block"
+                                                    onBlur={() => setTimeout(() => setActiveMenuQuoteId(null), 200)}
+                                                >
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setActiveMenuQuoteId(activeMenuQuoteId === quote.id ? null : quote.id);
+                                                        }}
+                                                        className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
+                                                    >
+                                                        <MoreVertical className="w-4 h-4 text-dark-400" />
+                                                    </button>
+
+                                                    {activeMenuQuoteId === quote.id && (
+                                                        <div className="absolute right-0 top-full mt-2 w-48 bg-dark-800 border border-dark-700 rounded-xl shadow-lg z-10 overflow-hidden">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDelete(quote.id);
+                                                                }}
+                                                                className="w-full flex items-center gap-3 px-4 py-3 text-left text-error-400 hover:bg-dark-700 transition-colors"
+                                                            >
+                                                                <Trash className="w-4 h-4" />
+                                                                Usuń wycenę
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );

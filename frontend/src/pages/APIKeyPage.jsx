@@ -1,41 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { widgetAPI } from '../lib/api';
 import { toast } from 'react-hot-toast';
-import { useAuthStore } from '../stores/authStore';
 import Layout from '../components/Layout';
 import { format } from 'date-fns';
+import { Trash2, Copy } from 'lucide-react';
 
 export default function APIKeyPage() {
-    const { token } = useAuthStore();
+    // const { token } = useAuthStore(); // No longer needed
     const queryClient = useQueryClient();
     const [newKey, setNewKey] = useState(null);
 
     const { data: keys, isLoading } = useQuery({
         queryKey: ['apiKeys'],
         queryFn: async () => {
-            const res = await fetch('http://localhost:8000/api/widget/dashboard/api-keys/', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to load keys');
-            return res.json();
+            const res = await widgetAPI.getKeys();
+            return res.data;
         }
     });
 
     const createMutation = useMutation({
         mutationFn: async (name) => {
-            const res = await fetch('http://localhost:8000/api/widget/dashboard/api-keys/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ name })
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Failed to create key');
-            }
-            return res.json();
+            const res = await widgetAPI.createKey(name);
+            return res.data;
         },
         onSuccess: (data) => {
             setNewKey(data);
@@ -43,9 +30,29 @@ export default function APIKeyPage() {
             queryClient.invalidateQueries(['apiKeys']);
         },
         onError: (error) => {
-            toast.error(error.message || 'Błąd tworzenia klucza');
+            toast.error(error.response?.data?.error || 'Błąd tworzenia klucza');
         }
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (keyId) => {
+            const res = await widgetAPI.deleteKey(keyId);
+            return res.data;
+        },
+        onSuccess: () => {
+            toast.success('Klucz usunięty!');
+            queryClient.invalidateQueries(['apiKeys']);
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.error || 'Błąd usuwania klucza');
+        }
+    });
+
+    const handleDelete = (keyId, keyName) => {
+        if (confirm(`Czy na pewno chcesz usunąć klucz "${keyName}"? Ta operacja jest nieodwracalna.`)) {
+            deleteMutation.mutate(keyId);
+        }
+    };
 
     const handleCreate = (e) => {
         e.preventDefault();
@@ -89,15 +96,39 @@ export default function APIKeyPage() {
                         <div className="grid gap-4">
                             <div>
                                 <label className="text-xs text-slate-400 uppercase font-bold">Public Key</label>
-                                <code className="block bg-slate-900 p-3 rounded text-green-300 font-mono text-sm break-all">
-                                    {newKey.public_key}
-                                </code>
+                                <div className="flex items-center gap-2 mt-1 bg-slate-900 rounded border border-slate-700">
+                                    <code className="flex-1 p-3 text-green-300 font-mono text-sm break-all">
+                                        {newKey.public_key}
+                                    </code>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(newKey.public_key);
+                                            toast.success('Public Key skopiowany!');
+                                        }}
+                                        className="p-2 mr-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                                        title="Kopiuj Public Key"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label className="text-xs text-slate-400 uppercase font-bold">Secret Key</label>
-                                <code className="block bg-slate-900 p-3 rounded text-red-300 font-mono text-sm break-all border border-red-500/30">
-                                    {newKey.secret_key}
-                                </code>
+                                <div className="flex items-center gap-2 mt-1 bg-slate-900 rounded border border-red-500/30">
+                                    <code className="flex-1 p-3 text-red-300 font-mono text-sm break-all">
+                                        {newKey.secret_key}
+                                    </code>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(newKey.secret_key);
+                                            toast.success('Secret Key skopiowany!');
+                                        }}
+                                        className="p-2 mr-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+                                        title="Kopiuj Secret Key"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <button
@@ -119,11 +150,12 @@ export default function APIKeyPage() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Utworzono</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Ostatnie użycie</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Akcje</th>
                             </tr>
                         </thead>
                         <tbody className="bg-slate-800 divide-y divide-slate-700">
                             {isLoading ? (
-                                <tr><td colSpan="5" className="px-6 py-4 text-center text-slate-400">Ładowanie...</td></tr>
+                                <tr><td colSpan="6" className="px-6 py-4 text-center text-slate-400">Ładowanie...</td></tr>
                             ) : keys?.map((key) => (
                                 <tr key={key.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{key.name}</td>
@@ -140,10 +172,20 @@ export default function APIKeyPage() {
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Nieaktywny</span>
                                         }
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <button
+                                            onClick={() => handleDelete(key.id, key.name)}
+                                            disabled={deleteMutation.isPending}
+                                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                                            title="Usuń klucz"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {keys?.length === 0 && (
-                                <tr><td colSpan="5" className="px-6 py-4 text-center text-slate-400">Brak kluczy API. Utwórz pierwszy.</td></tr>
+                                <tr><td colSpan="6" className="px-6 py-4 text-center text-slate-400">Brak kluczy API. Utwórz pierwszy.</td></tr>
                             )}
                         </tbody>
                     </table>

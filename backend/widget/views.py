@@ -80,8 +80,35 @@ class WidgetSubmitView(APIView):
             }
         )
 
+        # Create Quote for Dashboard visibility
+        quote_id = None
+        try:
+            from quotes.models import Quote
+            
+            # Determine target user (owner of the quote)
+            target_user = widget_config.auto_assign_to
+            if not target_user:
+                target_user = company.users.first()
+            
+            if target_user:
+                quote = Quote.objects.create(
+                    user=target_user,
+                    client_email=email,
+                    client_phone=phone,
+                    original_image=uploaded_file, # Same file
+                    status='draft',
+                    client_name=f"Lead {email}", # Placeholder
+                )
+                quote_id = quote.id
+                logger.info(f"Created Quote {quote.number} for Lead {lead.public_uuid}")
+            else:
+                logger.warning(f"No user found for company {company.name}, skipping Quote creation")
+                
+        except Exception as q_err:
+             logger.error(f"Failed to create Quote for submission: {q_err}")
+
         # Queue AI processing
-        task = process_lead_task.delay(lead.id)
+        task = process_lead_task.delay(lead.id, quote_id=quote_id)
         lead.celery_task_id = task.id
         lead.save(update_fields=['celery_task_id'])
 
@@ -251,5 +278,26 @@ class APIKeyCreateView(APIView):
             import traceback
             logger.error(f"Error creating API Key: {e}")
             logger.error(traceback.format_exc())
+            return Response({'error': str(e)}, status=500)
+
+
+class APIKeyDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, key_id):
+        try:
+            if not request.user.company:
+                return Response({'error': 'No company'}, status=400)
+            
+            company = request.user.company
+            api_key = APIKey.objects.filter(company=company, id=key_id).first()
+            
+            if not api_key:
+                return Response({'error': 'Key not found'}, status=404)
+            
+            api_key.delete()
+            return Response({'success': True}, status=200)
+        except Exception as e:
+            logger.error(f"Error deleting API Key: {e}")
             return Response({'error': str(e)}, status=500)
 
